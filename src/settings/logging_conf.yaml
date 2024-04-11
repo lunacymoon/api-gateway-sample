@@ -1,0 +1,84 @@
+version: 1
+disable_existing_loggers: false
+filters:
+  correlation_id:
+    (): asgi_correlation_id.log_filters.CorrelationIdFilter
+    uuid_length: 8
+  http:
+    (): core.fastapi.logging.HTTPFilter
+  asgi_exception:
+    (): core.fastapi.logging.ASGIExceptionFilter
+  relative_path:
+    (): core.fastapi.logging.RelativePathFilter
+
+formatters:
+  default:
+    class: logging.Formatter
+    format: '%(levelname)-9s %(asctime)s (%(name)s) %(message)s'
+  uvicorn_access:
+    class: settings.logging.UvicornFormatter
+    format: '%(levelprefix)s %(asctime)s.%(msecs)03dZ %(relativepath)s:%(lineno)s (%(correlation_id)s) %(client_addr)s - "%(request_line)s" %(status_code)s'
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+    use_colors: true
+  uvicorn_error:
+    class: settings.logging.UvicornFormatter
+    format: '%(levelprefix)s %(asctime)s.%(msecs)03dZ %(relativepath)s:%(lineno)s (%(correlation_id)s) %(message)s'
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+    use_colors: true
+  json:
+    class: settings.logging.JsonFormatter
+    format: '%(levelname)s %(asctime)s %(correlation_id)s %(name)s %(message)s'
+
+handlers:
+  default:
+    class: logging.StreamHandler
+    formatter: default
+    filters:
+      - correlation_id
+      - relative_path
+  gunicorn:
+    class: logging.StreamHandler
+    formatter: uvicorn_error
+    filters:
+      - correlation_id
+      - relative_path
+  uvicorn_access:
+    class: logging.StreamHandler
+    formatter: uvicorn_access
+    filters:
+      - correlation_id
+      - http
+      - asgi_exception
+      - relative_path
+  uvicorn_error:
+    class: logging.StreamHandler
+    formatter: uvicorn_error
+    filters:
+      - correlation_id
+      - asgi_exception
+      - relative_path
+
+loggers:
+  gunicorn.access: &gunicron
+    level: INFO
+    propagate: false
+    handlers:
+      - gunicorn
+  gunicorn.error: *gunicron
+  uvicorn.access:
+    level: INFO
+    propagate: false
+    handlers:
+      - uvicorn_access
+  uvicorn.error: &uvicorn
+    level: INFO
+    propagate: false
+    handlers:
+      - uvicorn_error
+  fastapi: *uvicorn
+  urllib3: *uvicorn
+  httpx._client: *uvicorn
+root:
+  level: INFO
+  handlers:
+    - default

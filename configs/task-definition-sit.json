@@ -1,0 +1,44 @@
+{
+  "family": "sit-ecip-api-gateway",
+  "taskRoleArn": "arn:aws:iam::186810293139:role/ECIP_APN1_ECS_Microservice_Execution_Role",
+  "executionRoleArn": "arn:aws:iam::186810293139:role/ECIP_APN1_ECS_Microservice_Execution_Role",
+  "containerDefinitions": [
+    {
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ecip-api-gateway",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "portMappings": [
+        {
+          "hostPort": 0,
+          "protocol": "tcp",
+          "containerPort": 8215
+        }
+      ],
+      "secrets": [],
+
+      "cpu": 200,
+
+      "memory": 400,
+
+      "memoryReservation": 400,
+
+      "volumesFrom": [],
+
+      "image": "186810293139.dkr.ecr.ap-northeast-1.amazonaws.com/ecip-sit/ecip-api-gateway:latest",
+
+      "essential": true,
+
+      "name": "ecip-api-gateway"
+    }
+  ],
+
+  "requiresCompatibilities": ["EC2"],
+  "pidMode": "task",
+  "ipcMode": "none"
+}
